@@ -87,19 +87,6 @@ This project blends elements of blackjack with innovative, π-themed mechanics. 
    python main.py
    ```
 
-## Project Structure
-
-A suggested structure for the repository is:
-
-```
-pi_blackjack/
-├── main.py               # Main game file
-├── README.md             # Project documentation
-├── requirements.txt      # Python dependencies
-├── assets/               # (Optional) Images, sounds, etc.
-└── docs/                 # (Optional) Additional documentation
-```
-
 ## Future Enhancements
 
 - **Enhanced Betting Mechanics:**  
