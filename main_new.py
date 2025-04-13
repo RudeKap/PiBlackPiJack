@@ -574,63 +574,52 @@ def draw_all_cards():
         draw_card(item["card"], item["pos"])
 
 # --- Game Logic Functions ---
-def dealer_turn():
-    global game_state, round_result, player_coins, deck # Added player_coins
-    print("Dealer's turn begins.")
 
-    # Reveal the hidden card first
+def dealer_turn():
+    print("Dealer's turn begins.")
+    global deck, dealer_cards, game_state, animation_queue, player_cards
+    # --- Keep the reveal logic and PI assignment as is ---
     revealed_card = False
     for i in range(len(dealer_cards)):
         pos, card = dealer_cards[i]
         if card.get("face_down", False):
             card["face_down"] = False
             revealed_card = True
-            # Optional: Add a brief pause or animation for reveal?
-            # For now, just flip instantly.
             print(f"Dealer reveals: {card['rank']}{card['suit']}")
             break
-
-    # Auto-assign any PI cards *after* revealing
     auto_assign_dealer_pi()
-    dealer_total = calculate_dealer_total(reveal_all=True) # Calculate total with all cards visible
-    print(f"Dealer initial total (after reveal/PI): {dealer_total:.2f}")
+    dealer_total = calculate_dealer_total(reveal_all=True)
+    print(f"Dealer total (after reveal/PI): {dealer_total:.2f}")
 
-    if not deck: # Now accesses the global deck correctly
-        print("Error: Deck empty during dealer turn. Reshuffling.")
-        deck = create_deck() # Assigns to the global deck correctly
-        
-    # Dealer hits based on rules (e.g., hit on soft 17, stand on hard 17+)
-    # Using simple rule: hit if total < 17
+    # --- Modify the hitting logic ---
     while dealer_total < 17:
         print("Dealer hits.")
         if not deck:
-            print("Error: Deck empty during dealer turn.")
-            deck = create_deck() # Reshuffle if empty mid-turn
+            print("Error: Deck empty during dealer turn. Reshuffling.")
+            deck = create_deck() # Reshuffle if empty
+            if not deck: # Still empty? Major issue.
+               print("FATAL ERROR: Deck empty even after reshuffle.")
+               # Handle this fatal error appropriately - maybe end game?
+               game_state = "game_over" # Or some error state
+               return
+
 
         new_card = deck.pop()
-        # Calculate target position for the new card
         new_target = calculate_dealer_target(len(dealer_cards))
-
-        # Add animation for the new card deal
         animation_queue.append(CardAnimation(deck_pos, new_target, ANIMATION_DURATION, "dealer", new_card, face_down_override=False))
 
-        # Important: Add the card to dealer_cards *immediately* conceptually,
-        # but the animation will handle drawing it moving.
-        # The state needs to know the card exists for future calculations or turn logic.
-        # However, adding it here means calculate_dealer_total needs care during animation.
-        # Let's add it *after* the animation finishes in the main loop instead.
-        # For the loop condition, we need to predict the total *if* the card is drawn.
-        # This is tricky. Let's stick to adding the animation and letting the main loop handle state updates.
-        # The dealer_turn function will be called again *after* the animation finishes if needed.
-        game_state = "dealing" # Set state to dealing to process the animation
-        return # Exit function, let animation play out
+        # ***** CHANGE HERE *****
+        # Keep the state as dealer_turn and return to let animation play.
+        # The main loop will call dealer_turn() again after the animation.
+        game_state = "dealer_turn" # Explicitly ensure state is correct
+        return # MUST return here to allow animation to play
 
-    # If dealer stands (total >= 17)
+    # --- This part runs ONLY if the while loop condition (dealer_total < 17) is FALSE ---
+    # Dealer stands (total >= 17)
     print(f"Dealer stands with total: {dealer_total:.2f}")
-    game_state = "round_end"
-    determine_winner() # Determine winner now that dealer's turn is complete
-
-
+    game_state = "round_end" # Transition to round end
+    determine_winner() # Determine winner now
+    
 # Modified determine_winner to check for win condition
 def determine_winner():
     global round_result, player_coins, current_bet, game_state # Added game_state
@@ -748,9 +737,6 @@ def draw_buttons(mouse_pos, mouse_click, buttons_active):
     # Return rects if needed elsewhere, otherwise not necessary
     # return hit_rect, stand_rect
 
-# ==============================================================================
-# Main Game Loop
-# ==============================================================================
 # ==============================================================================
 # Main Game Loop
 # ==============================================================================
@@ -959,10 +945,10 @@ def main():
                     # --- Post-Animation State Checks ---
                     # Only perform checks if the animation queue is NOW empty
                     if not animation_queue:
-                        # Capture the state *at the moment the queue became empty*
+            # Capture the state *at the moment the queue became empty*
                         state_when_queue_emptied = game_state
 
-                        # Scenario 1: We were 'dealing' (Initial Deal OR Player Hit finished)
+            # Scenario 1: We were 'dealing' (Initial Deal OR Player Hit finished)
                         if state_when_queue_emptied == "dealing":
                             print("Dealing sequence finished.")
                             player_total = calculate_player_total()
