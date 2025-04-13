@@ -3,6 +3,9 @@
 
 **Pi Blackjack UI** is a Python game built with Pygame that reimagines classic blackjack with a unique twist inspired by π (pi). In this game, cards are imbued with the number π, betting uses a coin system where the win condition is themed around reaching 314 (or any π‑related value), and special mechanics such as PI card input and unique winning conditions (like "PI found!" when specific cards are drawn) add creative flair.
 
+![Gameplay Screenshot](./image.png)
+
+
 ## Overview
 
 This project blends elements of blackjack with innovative, π-themed mechanics. Key aspects include:
